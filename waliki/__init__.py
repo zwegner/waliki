@@ -408,7 +408,7 @@ class Wiki(object):
 
 
 class UserManager(object):
-    """A very simple user Manager, that saves it's data as json."""
+    """A very simple user Manager, that saves its data as json."""
     def __init__(self, path):
         self.file = os.path.join(path, 'users.json')
 
@@ -421,7 +421,14 @@ class UserManager(object):
 
     def write(self, data):
         with open(self.file, 'w') as f:
-            f.write(json.dumps(data, indent=2))
+            f.write(json.dumps(data, indent=2, sort_keys=True))
+        # HACK: construct a phony page object with the users.json file as a
+        # path so we can commit it to git
+        page_path = os.path.join(app.config.get('CONTENT_DIR'), 'users.json')
+        users_page = Page(page_path, None, new=True)
+        page_saved.send(users_page,
+                        user=current_user,
+                        message='ADMIN: updating user accounts')
 
     def add_user(self, name, password, full_name, email,
                  active=True, roles=[], authentication_method=None):
