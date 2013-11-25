@@ -87,7 +87,7 @@ def display(url):
     if not page:
         flash('The page "{0}" does not exist, '
               'feel free to make it now!'.format((url)), 'warning')
-        return redirect(url_for('edit', url=urlify(url)))
+        return redirect(url_for('edit', url=wiki.urlify(url)))
     extra_context = {}
     pre_display.send(page, user=current_user, extra_context=extra_context)
     return render_template('page.html', page=page, **extra_context)
@@ -97,7 +97,7 @@ def display(url):
 def create():
     form = wiki.URLForm()
     if form.validate_on_submit():
-        return redirect(url_for('edit', url=urlify(form.url.data)))
+        return redirect(url_for('edit', url=wiki.urlify(form.url.data)))
     return render_template('create.html', form=form)
 
 @app.route('/<path:url>/_edit', methods=['GET', 'POST'])
