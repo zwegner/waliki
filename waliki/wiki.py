@@ -1,4 +1,3 @@
-import markup
 import os
 import re
 
@@ -7,6 +6,8 @@ from flask import abort
 from flask.ext.wtf import Form
 from wtforms import (TextField, TextAreaField, PasswordField)
 from wtforms.validators import (Required, ValidationError, Email)
+
+import markup
 
 # Wiki classes
 # ~~~~~~~~~~~~
@@ -199,18 +200,6 @@ class Wiki(object):
 # Forms
 # ~~~~~
 
-def urlify(url, protect_specials_url=True):
-    # Cleans the url and corrects various errors.
-    # Remove multiple spaces and leading and trailing spaces
-    if (protect_specials_url and
-            re.match(r'^(?i)(user|tag|create|search|index)', url)):
-        url = '-' + url
-    pretty_url = re.sub('[ ]{2,}', ' ', url).strip()
-    pretty_url = pretty_url.lower().replace('_', '-').replace(' ', '-')
-    # Corrects Windows style folders
-    pretty_url = pretty_url.replace('\\\\', '/').replace('\\', '/')
-    return pretty_url
-
 class URLForm(Form):
     url = TextField('', [Required()])
 
@@ -219,7 +208,7 @@ class URLForm(Form):
             raise ValidationError('The URL "%s" exists already.' % field.data)
 
     def clean_url(self, url):
-        return urlify(url)
+        return markup.urlify(url)
 
 class SearchForm(Form):
     term = TextField('', [Required()])

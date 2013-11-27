@@ -1,5 +1,6 @@
 import docutils.core
 import docutils.io
+import re
 
 import markdown
 import textwrap
@@ -68,11 +69,17 @@ class Markdown(Markup):
     def process(self):
         # Processes Markdown text to HTML, returns original markdown text,
         # and adds meta
-        md = markdown.Markdown(['codehilite', 'fenced_code', 'meta'])
+        md = markdown.Markdown(['codehilite', 'fenced_code', 'meta',
+            'wikilinks'], extension_configs={'wikilinks' : [('build_url',
+                self.build_url)]},
+            safe_mode='escape')
         html = md.convert(self.raw_content)
         meta_lines, body = self.raw_content.split('\n\n', 1)
         meta = md.Meta
         return html, body, meta
+
+    def build_url(self, label, base, end):
+        return base + urlify(label) + end
 
 class RestructuredText(Markup):
     NAME = 'restructuredtext'
@@ -189,3 +196,15 @@ class RestructuredText(Markup):
 
 all_markup_classes = dict([(cls.NAME, cls) for cls in
     Markup.__subclasses__()])
+
+def urlify(url, protect_specials_url=True):
+    # Cleans the url and corrects various errors.
+    # Remove multiple spaces and leading and trailing spaces
+    if (protect_specials_url and
+            re.match(r'^(?i)(user|tag|create|search|index)', url)):
+        url = '-' + url
+    pretty_url = re.sub('[ ]{2,}', ' ', url).strip()
+    pretty_url = pretty_url.lower().replace('_', '-').replace(' ', '-')
+    # Corrects Windows style folders
+    pretty_url = pretty_url.replace('\\\\', '/').replace('\\', '/')
+    return pretty_url
