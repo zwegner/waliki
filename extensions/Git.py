@@ -1,21 +1,16 @@
 import os
+import json
 import re
 from flask import (Blueprint, render_template, current_app,
                    request, url_for, redirect, abort)
 from git import *
 from gitdb import IStream
 from StringIO import StringIO
-import json
-
 
 gitplugin = Blueprint('gitplugin', __name__, template_folder='templates')
 
-
-"""
-    Helpers
-    ~~~~~~~
-"""
-
+# Helpers
+# ~~~~~~~
 
 class GitManager(object):
     def __init__(self, content_dir):
@@ -122,19 +117,14 @@ class GitManager(object):
         for path in files:
             self.repository.git.checkout('--', path)
 
-"""
-    Receivers
-    ~~~~~~~~~
-"""
-
+# Receivers
+# ~~~~~~~~~
 
 def git_commit(page, **extra):
     current_app.git.commit(page, extra['user'], extra['message'])
 
-
 def git_rev(page, **extra):
     current_app.git.last_rev(page)
-
 
 def extra_actions(page, **extra):
     context = extra['extra_context']
@@ -142,12 +132,8 @@ def extra_actions(page, **extra):
     actions.append(('History', url_for('gitplugin.history', url=page.url)))
     context['extra_actions'] = actions
 
-"""
-    Views
-    ~~~~~
-"""
-
-
+# Views
+# ~~~~~
 
 @gitplugin.route('/<path:url>/_version/<version>')
 def version(url, version):
@@ -163,7 +149,6 @@ def version(url, version):
     return render_template('page_version.html', page=page,
                            version=version, form=form)
 
-
 @gitplugin.route('/<path:url>/_diff/<new>..<old>', methods=['GET', 'POST'])
 def diff(url, new, old):
     page = current_app.wiki.get_or_404(url)
@@ -171,7 +156,6 @@ def diff(url, new, old):
     return render_template('diff.html', page=page,
                            new_commit=new,
                            old_commit=old)
-
 
 @gitplugin.route('/<path:url>/_history', methods=['GET', 'POST'])
 def history(url):
@@ -185,7 +169,6 @@ def history(url):
     return render_template('history.html', page=page, history=history,
                            max_changes=max_changes)
 
-
 @gitplugin.route('/_admin/deleted/', methods=['GET', 'POST'])
 def deleted():
     if request.method == 'POST':
@@ -194,12 +177,8 @@ def deleted():
     deleted = current_app.git.deleted()
     return render_template('deleted.html', deleted=deleted)
 
-
-"""
-    Initializer
-    ~~~~~~~~~~~
-"""
-
+# Initializer
+# ~~~~~~~~~~~
 
 def init(app):
     app.register_blueprint(gitplugin)
