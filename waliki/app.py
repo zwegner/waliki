@@ -13,6 +13,9 @@ import markup
 import users
 import wiki
 
+def get_subclass_dict(cls):
+    return dict([(c.__name__.lower(), c) for c in cls.__subclasses__()])
+
 # Application Setup
 # ~~~~~~~~~
 
@@ -38,7 +41,7 @@ manager = Manager(app)
 loginmanager = LoginManager()
 loginmanager.init_app(app)
 loginmanager.login_view = 'user_login'
-markup_class = markup.all_markup_classes[app.config.get('MARKUP')]
+markup_class = get_subclass_dict(markup.Markup)[app.config.get('MARKUP')]
 
 # FIX ME: This monkeypatching is pollution crap .
 #         Should be possible to import them wherever,

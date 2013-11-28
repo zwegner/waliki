@@ -11,7 +11,6 @@ from rst2html5 import HTML5Writer
 
 class Markup(object):
     """ Base markup class."""
-    NAME = 'Text'
     META_LINE = '%s: %s\n'
     EXTENSION = '.txt'
     HOWTO = """ """
@@ -36,7 +35,6 @@ class Markup(object):
         return cls(textwrap.dedent(cls.HOWTO)).process()[0]
 
 class Markdown(Markup):
-    NAME = 'markdown'
     META_LINE = '%s: %s\n'
     EXTENSION = '.md'
     HOWTO = """
@@ -82,7 +80,6 @@ class Markdown(Markup):
         return base + urlify(label) + end
 
 class RestructuredText(Markup):
-    NAME = 'restructuredtext'
     META_LINE = '.. %s: %s\n'
     IMAGE_LINE = '.. image:: %(url)s'
     LINK_LINE = '`%(filename)s <%(url)s>`_'
@@ -193,9 +190,6 @@ class RestructuredText(Markup):
                 except KeyError:
                     meta[key] = [value]
         return meta
-
-all_markup_classes = dict([(cls.NAME, cls) for cls in
-    Markup.__subclasses__()])
 
 def urlify(url, protect_specials_url=True):
     # Cleans the url and corrects various errors.
