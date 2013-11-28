@@ -10,6 +10,7 @@ from extensions.cache import cache
 from signals import wiki_signals, page_saved, pre_display, pre_edit
 
 import markup
+import storage
 import users
 import wiki
 
@@ -24,6 +25,7 @@ app.debug = True
 app.config['CONTENT_DIR'] = os.path.abspath('content')
 app.config['TITLE'] = 'wiki'
 app.config['MARKUP'] = 'markdown'  # or 'restructucturedtext'
+app.config['STORAGE'] = 'git'
 app.config['THEME'] = 'elegant'  # more at waliki/static/codemirror/theme
 try:
     app.config.from_pyfile(
@@ -50,6 +52,10 @@ app.wiki = wiki.Wiki(app.config.get('CONTENT_DIR'), markup_class)
 app.signals = wiki_signals
 app.EditorForm = wiki.EditorForm
 app.user_manager = users.UserManager(app)
+
+# Set up the storage engine. Must wait until the signals are constructed!
+storage_class = get_subclass_dict(storage.StorageEngine)[app.config.get('STORAGE')]
+storage_engine = storage_class(app)
 
 # ugh, all the WTForms stuff needs access to app as a global...
 wiki.app = app

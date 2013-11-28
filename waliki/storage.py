@@ -7,21 +7,43 @@ from git import *
 from gitdb import IStream
 from StringIO import StringIO
 
+class StorageEngine(object):
+    def load(self, path, version=None):
+        raise NotImplementedError()
+
+    def save(self, path, content):
+        raise NotImplementedError()
+
+    def history(self, path):
+        raise NotImplementedError()
+
+    def diff(self, path, version_new, version_old):
+        raise NotImplementedError()
+
+    def get_all_deleted(self):
+        raise NotImplementedError()
+
+# Git
+# ~~~
+
 gitplugin = Blueprint('gitplugin', __name__, template_folder='templates')
 
-# Helpers
-# ~~~~~~~
-
-class GitManager(object):
-    def __init__(self, content_dir):
-        self.content_dir = content_dir
-        if os.path.isdir(os.path.join(content_dir, '.git')):
-            self.repository = Repo(content_dir, odbt=GitDB)
+class Git(StorageEngine):
+    def __init__(self, app):
+        self.content_dir = app.config['CONTENT_DIR']
+        if os.path.isdir(os.path.join(self.content_dir, '.git')):
+            self.repository = Repo(self.content_dir, odbt=GitDB)
         else:
-            if not os.path.isdir(content_dir):
-                os.makedirs(content_dir)
-            os.chdir(content_dir)
+            if not os.path.isdir(self.content_dir):
+                os.makedirs(self.content_dir)
+            os.chdir(self.content_dir)
             self.repository = Repo.init()
+
+        app.register_blueprint(gitplugin)
+        app.signals.signal('page-saved').connect(git_commit)
+        app.signals.signal('pre-display').connect(git_rev)
+        app.signals.signal('pre-display').connect(extra_actions)
+        app.git = self
 
     def _get_blob_path(self, path):
         # remove "content/"
@@ -176,13 +198,3 @@ def deleted():
         current_app.git.undelete(files)
     deleted = current_app.git.deleted()
     return render_template('deleted.html', deleted=deleted)
-
-# Initializer
-# ~~~~~~~~~~~
-
-def init(app):
-    app.register_blueprint(gitplugin)
-    app.signals.signal('page-saved').connect(git_commit)
-    app.signals.signal('pre-display').connect(git_rev)
-    app.signals.signal('pre-display').connect(extra_actions)
-    app.git = GitManager(app.config['CONTENT_DIR'])
